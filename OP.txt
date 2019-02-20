@@ -1,0 +1,295 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using System.IO;
+
+namespace Shifr_Caesar
+{
+    public partial class SHC : Form
+    {
+        public SHC()
+        {
+            InitializeComponent();
+        }
+
+        public int int_key;
+        public bool f_cr=false, f_de=false;
+
+        /*public int poli(int a, int b)
+        {
+            return a + b;
+        }
+
+        public double poli(int a)
+        {
+            return Math.Sqrt(a);
+        }*/
+
+        private void key_TextChanged(object sender, EventArgs e) //изенение пол key
+        {
+            key.MaxLength = 2; //ограничение на длину
+            Regex rx = new Regex(@"\D", RegexOptions.IgnoreCase); //регулрное выражение, игнорирующее все, крое цифр
+            key.Text = rx.Replace(key.Text, ""); //активаци регулрного выражени
+            //переенна.Text - значение переенной типа string
+        }
+
+        private void Check_key_Click(object sender, EventArgs e)
+        {
+            int.TryParse(key.Text, out int_key); //перевод из string в int
+            if ((int_key < 1) || (int_key > 32))
+            {
+                MessageBox.Show("Введенно некорректное значение ключа"); //вывод сообщени
+                key.Clear();
+            }
+            else
+            {
+                l_close_txt.Enabled = true;
+                l_open_txt.Enabled = true;
+                open_text.Enabled = true;
+                close_text.Enabled = true;
+                Write_key.Enabled = true;
+                key.Enabled = false;
+                Check_key.Enabled = false;
+            }
+        }
+
+        private void open_text_TextChanged(object sender, EventArgs e)
+        {
+            open_text.MaxLength = 1000;
+            if ((open_text.Text != ""))
+            {
+                l_close_txt.Enabled = false;
+                l_open_txt.Enabled = false;
+                Crypt.Enabled = true;
+                Clean_all.Enabled = true;
+                close_text.Enabled = false;
+                Load.Enabled = false;
+            }
+            else
+            {
+                l_close_txt.Enabled = true;
+                l_open_txt.Enabled = true;
+                Crypt.Enabled = false;
+                Clean_all.Enabled = false;
+                close_text.Enabled = true;
+                Load.Enabled = true;
+            }
+        }
+
+        private void close_text_TextChanged(object sender, EventArgs e)
+        {
+            close_text.MaxLength = 1000;
+            if ((close_text.Text != ""))
+            {
+                l_close_txt.Enabled = false;
+                l_open_txt.Enabled = false;
+                Decrypt.Enabled = true;
+                Clean_all.Enabled = true;
+                open_text.Enabled = false;
+                Load.Enabled = false;
+            }
+            else
+            {
+                l_close_txt.Enabled = true;
+                l_open_txt.Enabled = true;
+                Decrypt.Enabled = false;
+                Clean_all.Enabled = false;
+                open_text.Enabled = true;
+                Load.Enabled = true;
+            }
+        }
+
+        private void Clean_all_Click(object sender, EventArgs e)
+        {
+            open_text.Clear(); //перенна.Clear - очистить поле
+            close_text.Clear();
+            open_text.Enabled = true;
+            close_text.Enabled = true;
+            Save.Enabled = false;
+        }
+
+        private void Write_key_Click(object sender, EventArgs e)
+        {
+            open_text.Clear();
+            close_text.Clear();
+            key.Clear();
+            open_text.Enabled = false;
+            close_text.Enabled = false;
+            Write_key.Enabled = false;
+            l_close_txt.Enabled = false;
+            l_open_txt.Enabled = false;
+            Load.Enabled = false;
+            Save.Enabled = false;
+            key.Enabled = true;
+            Check_key.Enabled = true;
+        }
+
+        private void Crypt_Click(object sender, EventArgs e)
+        {
+            int len = open_text.Text.Length; // переенна.text - получение текста типа string;
+            //перенна(текстова).Length -длина текста
+            if (len > 1000)
+                MessageBox.Show("Превышен объем текста");
+            else
+            {
+                f_cr = true;
+                f_de = false;
+                for (int i = 0; i < len; i++)
+                {
+                    if ((open_text.Text[i] >= 'а') && (open_text.Text[i] <= 'ё') && (open_text.Text[i] != '?'))
+                    {
+                        int temp=0;//дл преобразовани в код от 0 до 32
+                        if ((open_text.Text[i] >= 'а') && (open_text.Text[i] <= 'е'))
+                            temp=((Convert.ToInt32(open_text.Text[i]) - Convert.ToInt32('а')) + int_key) % 33;
+                        else
+                            if (open_text.Text[i] == 'ё')
+                                temp =((Convert.ToInt32('е')+1 - Convert.ToInt32('а')) + int_key) % 33;
+                            else
+                                if ((open_text.Text[i] >= 'ж') && (open_text.Text[i] <= 'я'))
+                                    temp = ((Convert.ToInt32(open_text.Text[i]) +1 - Convert.ToInt32('а')) + int_key) % 33;
+                        if (temp >= 0 && temp <= 5)
+                            close_text.Text += Convert.ToChar(temp + Convert.ToInt32('а'));
+                        else
+                            if (temp == 6)
+                                close_text.Text += "ё";
+                            else
+                                if (temp >= 7 && temp <= 32)
+                                    close_text.Text += Convert.ToChar(temp + Convert.ToInt32('а')-1);
+                    }
+                    else
+                        if ((open_text.Text[i] >= 'А') && (open_text.Text[i] <= 'Я') || (open_text.Text[i] == 'Ё'))
+                        {
+                            int temp = 0;
+                            if ((open_text.Text[i] >= 'А') && (open_text.Text[i] <= 'Е'))
+                                temp = ((Convert.ToInt32(open_text.Text[i]) - Convert.ToInt32('А')) + int_key) % 33;
+                            else
+                                if (open_text.Text[i] == 'Ё')
+                                    temp = ((Convert.ToInt32('Е') + 1 - Convert.ToInt32('А')) + int_key) % 33;
+                                else
+                                    if ((open_text.Text[i] >= 'Ж') && (open_text.Text[i] <= 'Я'))
+                                        temp = ((Convert.ToInt32(open_text.Text[i]) + 1 - Convert.ToInt32('А')) + int_key) % 33;
+                            if (temp >= 0 && temp <= 5)
+                                close_text.Text += Convert.ToChar(temp + Convert.ToInt32('А'));
+                            else
+                                if (temp == 6)
+                                    close_text.Text += "Ё";
+                                else
+                                    if (temp >= 7 && temp <= 32)
+                                        close_text.Text += Convert.ToChar(temp + Convert.ToInt32('А') - 1);
+                        }
+                        else
+                        close_text.Text += open_text.Text[i];
+                }
+                Crypt.Enabled = false;
+                Decrypt.Enabled = false;
+                Save.Enabled = true;
+            }
+        }
+
+        private void Decrypt_Click(object sender, EventArgs e)
+        {
+            int len = close_text.Text.Length;
+            if (len > 1000)
+                MessageBox.Show("Превышен объем текста");
+            else
+            {
+                f_cr = true;
+                f_de = false;
+                for (int i = 0; i < len; i++)
+                {
+                    if ((close_text.Text[i] >= 'а') && (close_text.Text[i] <= 'ё') && (close_text.Text[i] != '?'))
+                    {
+                        int temp = 0;
+                        if ((close_text.Text[i] >= 'а') && (close_text.Text[i] <= 'е'))
+                            temp = ((Convert.ToInt32(close_text.Text[i]) + 33 - Convert.ToInt32('а')) - int_key) % 33;
+                        else
+                            if (close_text.Text[i] == 'ё')
+                                temp = ((Convert.ToInt32('е') + 1 + 33 - Convert.ToInt32('а')) - int_key) % 33;
+                            else
+                                if ((close_text.Text[i] >= 'ж') && (close_text.Text[i] <= 'я'))
+                                    temp = ((Convert.ToInt32(close_text.Text[i]) + 1 + 33 - Convert.ToInt32('а')) - int_key) % 33;
+                        if (temp >= 0 && temp <= 5)
+                            open_text.Text += Convert.ToChar(temp + Convert.ToInt32('а'));
+                        else
+                            if (temp == 6)
+                                open_text.Text += "ё";
+                            else
+                                if (temp >= 7 && temp <= 32)
+                                    open_text.Text += Convert.ToChar(temp + Convert.ToInt32('а') - 1);
+                    }
+                    else
+                        if ((close_text.Text[i] >= 'А') && (close_text.Text[i] <= 'Я') || (close_text.Text[i] == 'Ё'))
+                        {
+                            int temp = 0;
+                            if ((close_text.Text[i] >= 'А') && (close_text.Text[i] <= 'Е'))
+                                temp = ((Convert.ToInt32(close_text.Text[i]) + 33 - Convert.ToInt32('А')) - int_key) % 33;
+                            else
+                                if (close_text.Text[i] == 'Ё')
+                                    temp = ((Convert.ToInt32('Е') + 1 + 33 - Convert.ToInt32('А')) - int_key) % 33;
+                                else
+                                    if ((close_text.Text[i] >= 'Ж') && (close_text.Text[i] <= 'Я'))
+                                        temp = ((Convert.ToInt32(close_text.Text[i]) + 1 + 33 - Convert.ToInt32('А')) - int_key) % 33;
+                            if (temp >= 0 && temp <= 5)
+                                open_text.Text += Convert.ToChar(temp + Convert.ToInt32('А'));
+                            else
+                                if (temp == 6)
+                                    open_text.Text += "Ё";
+                                else
+                                    if (temp >= 7 && temp <= 32)
+                                        open_text.Text += Convert.ToChar(temp + Convert.ToInt32('А') - 1);
+                        }
+                        else
+                            open_text.Text += close_text.Text[i];
+                }
+                Crypt.Enabled = false;
+                Decrypt.Enabled = false;
+                Save.Enabled = true;
+            }
+        }
+
+        private void Load_Click(object sender, EventArgs e)
+        {
+                if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    if (l_open_txt.Checked == true)
+                        open_text.LoadFile(openFileDialog1.FileName);
+                    else
+                        if (l_close_txt.Checked == true)
+                            close_text.LoadFile(openFileDialog1.FileName);
+                }
+
+        }
+
+        private void Save_Click(object sender, EventArgs e)
+        {
+                if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    if (f_cr == true)
+                      close_text.SaveFile(saveFileDialog1.FileName);
+                    else
+                        if (f_de == true)
+                            open_text.SaveFile(saveFileDialog1.FileName);
+                }
+                
+        }
+
+        private void l_open_txt_CheckedChanged(object sender, EventArgs e)
+        {
+            Load.Enabled = true;
+        }
+
+        private void l_close_txt_CheckedChanged(object sender, EventArgs e)
+        {
+            Load.Enabled = true;
+        }
+
+    }
+}
+
